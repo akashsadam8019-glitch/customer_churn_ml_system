@@ -34,6 +34,16 @@ class ModelTrainer:
 
             predictions = model.predict(X_test)
 
+            params = {
+                "n_estimators": 200,
+                "max_depth": 10,
+                "min_samples_split": 5,
+                "min_samples_leaf": 2,
+                "random_state": 42,
+                "n_jobs": -1,
+
+            }   
+
             metrics = {
                 "accuracy": accuracy_score(y_test, predictions),
                 "precision": precision_score(y_test, predictions),
@@ -43,7 +53,7 @@ class ModelTrainer:
 
             logger.info(metrics)
 
-            return model, metrics
+            return model, metrics, params
 
         except Exception as e:
             logger.error(e)

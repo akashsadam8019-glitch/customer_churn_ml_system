@@ -3,6 +3,12 @@ import sys
 import joblib
 import pandas as pd
 
+from pandas.api.types import (
+    is_numeric_dtype,
+    is_string_dtype,
+    is_object_dtype,
+)
+
 from sklearn.compose import ColumnTransformer
 from sklearn.impute import SimpleImputer
 from sklearn.model_selection import train_test_split
@@ -24,44 +30,87 @@ class DataTransformation:
 
             logger.info("Preparing dataset...")
 
+            # =====================================================
+            # Handle TotalCharges
+            # =====================================================
+
             df["TotalCharges"] = df["TotalCharges"].replace(
                 r"^\s*$",
                 pd.NA,
-                regex=True
+                regex=True,
             )
 
             df["TotalCharges"] = pd.to_numeric(
                 df["TotalCharges"],
-                errors="coerce"
+                errors="coerce",
             )
+
+            # =====================================================
+            # Features & Target
+            # =====================================================
 
             X = df.drop(columns=["customerID", "Churn"])
             y = df["Churn"].map({"No": 0, "Yes": 1})
 
-            categorical_features = X.select_dtypes(
-                include=["object", "string", "str"]
-            ).columns.tolist()
+            # =====================================================
+            # Detect Feature Types
+            # =====================================================
 
-            numerical_features = X.select_dtypes(
-                include=["int64", "float64"]
-            ).columns.tolist()
+            categorical_features = [
+                col
+                for col in X.columns
+                if is_string_dtype(X[col]) or is_object_dtype(X[col])
+            ]
+
+            numerical_features = [
+                col
+                for col in X.columns
+                if is_numeric_dtype(X[col])
+            ]
+
+            logger.info(f"Categorical Features: {categorical_features}")
+            logger.info(f"Numerical Features: {numerical_features}")
+
+            # =====================================================
+            # Numerical Pipeline
+            # =====================================================
 
             numerical_pipeline = Pipeline(
                 steps=[
-                    ("imputer", SimpleImputer(strategy="median")),
-                    ("scaler", StandardScaler()),
-                ]
-            )
-
-            categorical_pipeline = Pipeline(
-                steps=[
-                    ("imputer", SimpleImputer(strategy="most_frequent")),
                     (
-                        "encoder",
-                        OneHotEncoder(handle_unknown="ignore"),
+                        "imputer",
+                        SimpleImputer(strategy="median"),
+                    ),
+                    (
+                        "scaler",
+                        StandardScaler(),
                     ),
                 ]
             )
+
+            # =====================================================
+            # Categorical Pipeline
+            # =====================================================
+
+            categorical_pipeline = Pipeline(
+                steps=[
+                    (
+                        "imputer",
+                        SimpleImputer(strategy="most_frequent"),
+                    ),
+                    (
+                        "encoder",
+                        OneHotEncoder(
+                            handle_unknown="ignore",
+                            sparse_output=False,
+                        ),
+                    ),
+                ]
+            )
+
+            # =====================================================
+            # Column Transformer
+            # =====================================================
 
             preprocessor = ColumnTransformer(
                 transformers=[
@@ -78,6 +127,10 @@ class DataTransformation:
                 ]
             )
 
+            # =====================================================
+            # Train Test Split
+            # =====================================================
+
             X_train, X_test, y_train, y_test = train_test_split(
                 X,
                 y,
@@ -86,8 +139,14 @@ class DataTransformation:
                 stratify=y,
             )
 
+            # =====================================================
+            # Apply Preprocessing
+            # =====================================================
+
             X_train = preprocessor.fit_transform(X_train)
             X_test = preprocessor.transform(X_test)
+
+            logger.info("Data Transformation Completed Successfully.")
 
             return (
                 X_train,
