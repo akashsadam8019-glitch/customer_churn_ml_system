@@ -1,4 +1,6 @@
+import os
 import sys
+import joblib
 import pandas as pd
 
 from sklearn.compose import ColumnTransformer
@@ -22,23 +24,20 @@ class DataTransformation:
 
             logger.info("Preparing dataset...")
 
-            # Handle TotalCharges
             df["TotalCharges"] = df["TotalCharges"].replace(
                 r"^\s*$",
                 pd.NA,
-                regex=True,
+                regex=True
             )
 
             df["TotalCharges"] = pd.to_numeric(
                 df["TotalCharges"],
-                errors="coerce",
+                errors="coerce"
             )
 
-            # Split Features and Target
             X = df.drop(columns=["customerID", "Churn"])
             y = df["Churn"].map({"No": 0, "Yes": 1})
 
-            # Feature Lists
             categorical_features = X.select_dtypes(
                 include=["object", "string", "str"]
             ).columns.tolist()
@@ -47,10 +46,6 @@ class DataTransformation:
                 include=["int64", "float64"]
             ).columns.tolist()
 
-            logger.info(f"Categorical Features: {categorical_features}")
-            logger.info(f"Numerical Features: {numerical_features}")
-
-            # Numerical Pipeline
             numerical_pipeline = Pipeline(
                 steps=[
                     ("imputer", SimpleImputer(strategy="median")),
@@ -58,20 +53,16 @@ class DataTransformation:
                 ]
             )
 
-            # Categorical Pipeline
             categorical_pipeline = Pipeline(
                 steps=[
                     ("imputer", SimpleImputer(strategy="most_frequent")),
                     (
                         "encoder",
-                        OneHotEncoder(
-                            handle_unknown="ignore"
-                        ),
+                        OneHotEncoder(handle_unknown="ignore"),
                     ),
                 ]
             )
 
-            # Combine Pipelines
             preprocessor = ColumnTransformer(
                 transformers=[
                     (
@@ -87,7 +78,6 @@ class DataTransformation:
                 ]
             )
 
-            # Train/Test Split
             X_train, X_test, y_train, y_test = train_test_split(
                 X,
                 y,
@@ -96,11 +86,8 @@ class DataTransformation:
                 stratify=y,
             )
 
-            # Apply Preprocessing
             X_train = preprocessor.fit_transform(X_train)
             X_test = preprocessor.transform(X_test)
-
-            logger.info("Data transformation completed successfully.")
 
             return (
                 X_train,
@@ -109,6 +96,24 @@ class DataTransformation:
                 y_test,
                 preprocessor,
             )
+
+        except Exception as e:
+            logger.error(e)
+            raise CustomException(e, sys)
+
+    def save_preprocessor(self, preprocessor):
+
+        try:
+
+            os.makedirs("artifacts", exist_ok=True)
+
+            path = "artifacts/preprocessor.pkl"
+
+            joblib.dump(preprocessor, path)
+
+            logger.info(f"Preprocessor saved at {path}")
+
+            return path
 
         except Exception as e:
             logger.error(e)
