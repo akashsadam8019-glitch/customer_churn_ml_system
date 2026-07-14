@@ -14,7 +14,6 @@ class DataTransformation:
     def handle_missing_values(self, df: pd.DataFrame) -> pd.DataFrame:
 
         try:
-
             logger.info("Handling missing values...")
 
             df["TotalCharges"] = df["TotalCharges"].replace(
@@ -50,8 +49,11 @@ class DataTransformation:
                 include=["object", "string", "str"]
             ).columns.tolist()
 
-            categorical_columns.remove("customerID")
-            categorical_columns.remove("Churn")
+            if "customerID" in categorical_columns:
+                categorical_columns.remove("customerID")
+
+            if "Churn" in categorical_columns:
+                categorical_columns.remove("Churn")
 
             for column in categorical_columns:
                 df[column] = label_encoder.fit_transform(df[column])
@@ -61,6 +63,25 @@ class DataTransformation:
             logger.info("Categorical encoding completed.")
 
             return df
+
+        except Exception as e:
+            logger.error(e)
+            raise CustomException(e, sys)
+
+    def split_features_target(self, df: pd.DataFrame):
+
+        try:
+
+            logger.info("Splitting features and target...")
+
+            X = df.drop(columns=["customerID", "Churn"])
+
+            y = df["Churn"]
+
+            logger.info(f"Feature Shape : {X.shape}")
+            logger.info(f"Target Shape  : {y.shape}")
+
+            return X, y
 
         except Exception as e:
             logger.error(e)
