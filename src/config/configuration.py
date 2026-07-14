@@ -38,3 +38,5 @@ class ConfigurationManager:
                 self.config["reports"]["validation_report_path"]
             ),
         )
+    def get_schema(self):
+        return self.schema
