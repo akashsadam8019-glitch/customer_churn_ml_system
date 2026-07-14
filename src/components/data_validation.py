@@ -8,25 +8,25 @@ from src.logger.logger import logger
 
 class DataValidation:
     """
-    Responsible for validating the raw dataset before
-    it enters the preprocessing pipeline.
+    Responsible for validating the ingested dataset.
     """
 
     def __init__(self, config):
         self.config = config
         logger.info("DataValidation component initialized.")
 
-    def load_dataset(self):
+    def validate_dataframe(self, df: pd.DataFrame) -> pd.DataFrame:
         """
-        Load dataset for validation.
+        Validate the ingested dataframe.
         """
 
         try:
-            logger.info(f"Loading dataset from: {self.config.raw_data_path}")
+            logger.info("Starting data validation...")
 
-            df = pd.read_csv(self.config.raw_data_path)
+            if df.empty:
+                raise ValueError("Dataset is empty.")
 
-            logger.info(f"Dataset loaded successfully. Shape: {df.shape}")
+            logger.info(f"Dataset contains {df.shape[0]} rows and {df.shape[1]} columns.")
 
             return df
 
