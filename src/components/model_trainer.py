@@ -3,7 +3,12 @@ import sys
 import joblib
 
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import (
+    accuracy_score,
+    precision_score,
+    recall_score,
+    f1_score,
+)
 
 from src.exception.exception import CustomException
 from src.logger.logger import logger
@@ -29,11 +34,16 @@ class ModelTrainer:
 
             predictions = model.predict(X_test)
 
-            accuracy = accuracy_score(y_test, predictions)
+            metrics = {
+                "accuracy": accuracy_score(y_test, predictions),
+                "precision": precision_score(y_test, predictions),
+                "recall": recall_score(y_test, predictions),
+                "f1_score": f1_score(y_test, predictions),
+            }
 
-            logger.info(f"Accuracy: {accuracy:.4f}")
+            logger.info(metrics)
 
-            return model, accuracy
+            return model, metrics
 
         except Exception as e:
             logger.error(e)
@@ -43,18 +53,13 @@ class ModelTrainer:
 
         try:
 
-            logger.info("Saving trained model...")
+            os.makedirs("artifacts", exist_ok=True)
 
-            os.makedirs("models", exist_ok=True)
-
-            model_path = os.path.join(
-                "models",
-                "customer_churn_model.pkl"
-            )
+            model_path = "artifacts/model.pkl"
 
             joblib.dump(model, model_path)
 
-            logger.info(f"Model saved at: {model_path}")
+            logger.info(f"Model saved at {model_path}")
 
             return model_path
 
