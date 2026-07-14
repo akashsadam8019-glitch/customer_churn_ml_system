@@ -1,0 +1,12 @@
+data:
+  raw_data_path: data/raw/customer_churn.csv
+  processed_data_path: data/processed/validated_customer_churn.csv
+
+reports:
+  validation_report_path: reports/validation_report.json
+
+models:
+  model_path: models/churn_model.pkl
+
+logs:
+  log_dir: logs/
