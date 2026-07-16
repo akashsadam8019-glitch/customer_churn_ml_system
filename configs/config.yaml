@@ -1,12 +1,20 @@
 data:
   raw_data_path: data/raw/customer_churn.csv
-  processed_data_path: data/processed/validated_customer_churn.csv
+
+artifacts:
+  artifact_dir: artifacts
+  model_path: artifacts/model.pkl
+  preprocessor_path: artifacts/preprocessor.pkl
 
 reports:
   validation_report_path: reports/validation_report.json
 
-models:
-  model_path: models/churn_model.pkl
+mlflow:
+  experiment_name: Customer_Churn_Prediction
+
+api:
+  host: 0.0.0.0
+  port: 8000
 
 logs:
-  log_dir: logs/
+  log_dir: logs
