@@ -139,6 +139,19 @@ class DataTransformation:
                 stratify=y,
             )
 
+            reference_df = X_train.copy()
+
+            reference_df["Churn"] = y_train.values
+
+            reference_df.to_csv(
+                "artifacts/reference_data.csv",
+                index=False,
+            )
+
+            logger.info(
+            "Reference dataset saved successfully."
+            )
+
             # =====================================================
             # Apply Preprocessing
             # =====================================================
